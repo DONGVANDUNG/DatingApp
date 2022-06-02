@@ -9,11 +9,11 @@ import { ReplaySubject } from 'rxjs';
 })
 export class AccountService {
   baseUrl = environment.apiUrl;
-  private currentUserSource = new ReplaySubject<User>(1);
-  currentUser$ = this.currentUserSource.asObservable();
+  private currentUserSource = new ReplaySubject<User>(1); //để lưu người dùng đăng nhâpk vào hệ thống
+  currentUser$ = this.currentUserSource.asObservable(); //người dùng không thể truy cập đến các thuộc tính next ở sau
   constructor(private http: HttpClient) {}
   login(model: any) {
-    return this.http.post<User>(this.baseUrl + 'account/login', model).pipe(
+    return this.http.post<User>(this.baseUrl + 'Account/login', model).pipe(
       map((response: User) => {
         const user = response;
         if (user) {
@@ -32,12 +32,19 @@ export class AccountService {
     );
   }
   setCurrentUser(user: User) {
-    this.currentUserSource.next(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    user.roles = [];
+    const roles = this.getDecodedToken(user.token).role;
+    Array.isArray(roles) ? (user.roles = roles) : user.roles.push(roles); //nếu là 1 mảng thì gán cho mảng ban đầu, còn nếu là 1 chuỗi thì push vào mảng ban đầu
+    this.currentUserSource.next(user); //trỏ đến user hiện tại
+    localStorage.setItem('user', JSON.stringify(user)); //lưu user đó vào localstorage với key là 'user'
   }
 
   logout() {
-    localStorage.removeItem('user');
-    this.currentUserSource.next(null!);
+    localStorage.removeItem('user'); //xóa key 'user' tức là xóa người dùng hiện tại
+    this.currentUserSource.next(null!); //xóa biến lưu trữ trong ReplaySubject
+  }
+
+  getDecodedToken(token: string) {
+    return JSON.parse(atob(token.split('.')[1])); //giải mã 1 chuỗi được mã hóa
   }
 }

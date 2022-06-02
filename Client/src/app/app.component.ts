@@ -25,7 +25,7 @@ export class AppComponent implements OnInit {
     this.accountService.setCurrentUser(user);
   }
   getUsers() {
-    this.http.get('https://localhost:7080/api/users').subscribe(
+    this.http.get('https://localhost:7080/api/user').subscribe(
       (response) => {
         this.users = response;
       },
